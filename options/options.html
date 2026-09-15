@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messenger Sidebar Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="settings-container">
+    <header class="settings-header">
+      <img src="../icons/icon-48.png" alt="Logo" class="header-logo">
+      <div>
+        <h2>Messenger Sidebar</h2>
+        <p class="subtitle">Ultra-lightweight & Dynamic Settings</p>
+      </div>
+    </header>
+
+    <div class="settings-body">
+      <!-- Default Zoom Level -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="default-zoom">Default Zoom Level</label>
+          <span class="setting-desc">Adjust sidebar scale (70% - 130%)</span>
+        </div>
+        <div class="range-container">
+          <input type="range" id="default-zoom" min="70" max="130" step="5" value="100">
+          <span id="zoom-val">100%</span>
+        </div>
+      </div>
+
+      <!-- Memory Saver Idle Timeout -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="sleep-timeout">Memory Saver Auto-Sleep</label>
+          <span class="setting-desc">Automatically suspend inactive messenger to conserve RAM and CPU</span>
+        </div>
+        <select id="sleep-timeout" class="setting-input">
+          <option value="0">Disabled (Always keep loaded)</option>
+          <option value="5">After 5 minutes of inactivity</option>
+          <option value="15">After 15 minutes of inactivity</option>
+          <option value="30">After 30 minutes of inactivity</option>
+          <option value="60">After 1 hour of inactivity</option>
+        </select>
+      </div>
+
+      <!-- Shortcut Reference -->
+      <div class="shortcut-box">
+        <h4>Keyboard Shortcuts</h4>
+        <div class="shortcut-row">
+          <span>Toggle Messenger Sidebar</span>
+          <kbd>Ctrl+Alt+M</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Toggle Sleep / Memory Saver</span>
+          <kbd>Ctrl+Alt+S</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Zoom In / Zoom Out</span>
+          <kbd>Ctrl + / Ctrl -</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Reset Zoom</span>
+          <kbd>Ctrl + 0</kbd>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="save-status">Settings saved automatically</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

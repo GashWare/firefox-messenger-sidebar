@@ -1,0 +1,268 @@
+/* Ultra-lightweight Messenger Sidebar Styles */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f2f5;
+  --bg-toolbar: rgba(248, 249, 250, 0.95);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --text-primary: #1c1e21;
+  --text-secondary: #65676b;
+  --accent-color: #0084ff;
+  --accent-hover: #006bce;
+  --btn-hover: rgba(0, 0, 0, 0.06);
+  --toolbar-height: 38px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #18191a;
+    --bg-secondary: #242526;
+    --bg-toolbar: rgba(36, 37, 38, 0.95);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --text-primary: #e4e6eb;
+    --text-secondary: #b0b3b8;
+    --accent-color: #2d88ff;
+    --accent-hover: #4599ff;
+    --btn-hover: rgba(255, 255, 255, 0.08);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+}
+
+/* Slim Header Toolbar */
+.toolbar {
+  height: var(--toolbar-height);
+  width: 100%;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  z-index: 100;
+  position: relative;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.brand-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.brand-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+
+.tool-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tool-btn:hover {
+  background: var(--btn-hover);
+  color: var(--text-primary);
+}
+
+.tool-btn:active {
+  transform: scale(0.94);
+}
+
+.icon-btn svg {
+  display: block;
+}
+
+.zoom-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: center;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.zoom-text:hover {
+  background: var(--btn-hover);
+  color: var(--text-primary);
+}
+
+/* Main Viewport */
+.viewport {
+  width: 100%;
+  height: calc(100% - var(--toolbar-height));
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* Scaling Frame Container */
+.frame-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.messenger-frame {
+  border: none;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform-origin: 0 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Loader Animation */
+.loader-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loader-container.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.loader-text {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Memory Saver / Sleep Screen */
+.sleep-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+  text-align: center;
+}
+
+.sleep-screen.hidden {
+  display: none;
+}
+
+.sleep-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px 16px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sleep-icon {
+  font-size: 32px;
+}
+
+.sleep-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sleep-card p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.btn-primary {
+  background: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+}
