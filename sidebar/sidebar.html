@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messenger Sidebar</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <!-- Ultra-compact Top Control Bar -->
+  <header id="toolbar" class="toolbar">
+    <div class="toolbar-section toolbar-left">
+      <div class="brand-badge">
+        <img src="../icons/icon-16.png" alt="Logo" class="brand-icon">
+        <span class="brand-title">Messenger</span>
+      </div>
+    </div>
+
+    <div class="toolbar-section toolbar-center">
+      <button id="btn-zoom-out" class="tool-btn" title="Zoom Out (Ctrl+-)">－</button>
+      <span id="zoom-indicator" class="zoom-text" title="Click to reset zoom">100%</span>
+      <button id="btn-zoom-in" class="tool-btn" title="Zoom In (Ctrl++)">＋</button>
+    </div>
+
+    <div class="toolbar-section toolbar-right">
+      <button id="btn-reload" class="tool-btn icon-btn" title="Reload (F5 / Ctrl+R)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"></path>
+          <path d="M1 20v-6h6"></path>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+
+      <button id="btn-suspend" class="tool-btn icon-btn" title="Memory Saver: Suspend/Resume to save RAM (Ctrl+Alt+S)">
+        <svg id="icon-suspend" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+      </button>
+
+      <button id="btn-popout" class="tool-btn icon-btn" title="Pop out into standalone window">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport Container -->
+  <main id="viewport" class="viewport">
+    <!-- Loading Overlay -->
+    <div id="loader" class="loader-container">
+      <div class="spinner"></div>
+      <p class="loader-text">Loading Messenger...</p>
+    </div>
+
+    <!-- Sleep / Memory Saver Screen -->
+    <div id="sleep-screen" class="sleep-screen hidden">
+      <div class="sleep-card">
+        <div class="sleep-icon">💤</div>
+        <h3>Memory Saver Active</h3>
+        <p>Messenger is suspended to conserve memory and CPU.</p>
+        <button id="btn-wake" class="btn-primary">Wake Up Messenger</button>
+      </div>
+    </div>
+
+    <!-- Iframe Frame Container with Hardware Accelerated Scaling -->
+    <div id="frame-wrapper" class="frame-wrapper">
+      <iframe
+        id="messenger-frame"
+        class="messenger-frame"
+        src="about:blank"
+        allow="camera; microphone; geolocation; clipboard-read; clipboard-write; autoplay; fullscreen"
+      ></iframe>
+    </div>
+  </main>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>

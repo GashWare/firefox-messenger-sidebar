@@ -1,0 +1,21 @@
+{
+  "name": "facebook-messenger-sidebar-addon",
+  "version": "1.0.0",
+  "description": "Ultra lightweight, robust, dynamic and resource-efficient Facebook Messenger Firefox sidebar extension",
+  "main": "background/background.js",
+  "scripts": {
+    "lint": "npx web-ext lint --ignore-files scripts/**",
+    "build": "npx web-ext build --overwrite-dest --ignore-files scripts/**",
+    "start": "npx web-ext run --ignore-files scripts/**"
+  },
+  "keywords": [
+    "firefox",
+    "webextension",
+    "facebook",
+    "messenger",
+    "sidebar",
+    "lightweight"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
