@@ -10,7 +10,7 @@
   <!-- Ultra-compact Top Control Bar -->
   <header id="toolbar" class="toolbar">
     <div class="toolbar-section toolbar-left">
-      <div class="brand-badge">
+      <div class="brand-badge" title="Facebook Messenger Sidebar">
         <img src="../icons/icon-16.png" alt="Logo" class="brand-icon">
         <span class="brand-title">Messenger</span>
       </div>
@@ -18,12 +18,24 @@
 
     <div class="toolbar-section toolbar-center">
       <button id="btn-zoom-out" class="tool-btn" title="Zoom Out (Ctrl+-)">－</button>
-      <span id="zoom-indicator" class="zoom-text" title="Click to reset zoom">100%</span>
+      <span id="zoom-indicator" class="zoom-text" title="Click to reset zoom (Ctrl+0)">100%</span>
       <button id="btn-zoom-in" class="tool-btn" title="Zoom In (Ctrl++)">＋</button>
     </div>
 
     <div class="toolbar-section toolbar-right">
-      <button id="btn-reload" class="tool-btn icon-btn" title="Reload (F5 / Ctrl+R)">
+      <!-- AI Theming Studio Toggle -->
+      <button id="btn-ai-theme" class="tool-btn icon-btn" title="AI Theming Studio & Custom Colors (Ctrl+Alt+T)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          <path d="M5 3v4"/>
+          <path d="M19 17v4"/>
+          <path d="M3 5h4"/>
+          <path d="M17 19h4"/>
+        </svg>
+      </button>
+
+      <!-- Reload / Hard Refresh Button -->
+      <button id="btn-reload" class="tool-btn icon-btn" title="Reload Messenger (Click: Reload | Shift+Click: Hard Refresh / Clear Cache)">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 4v6h-6"></path>
           <path d="M1 20v-6h6"></path>
@@ -31,6 +43,7 @@
         </svg>
       </button>
 
+      <!-- Memory Saver / Suspend Button -->
       <button id="btn-suspend" class="tool-btn icon-btn" title="Memory Saver: Suspend/Resume to save RAM (Ctrl+Alt+S)">
         <svg id="icon-suspend" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
@@ -38,6 +51,7 @@
         </svg>
       </button>
 
+      <!-- Popout Button -->
       <button id="btn-popout" class="tool-btn icon-btn" title="Pop out into standalone window">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -47,6 +61,71 @@
       </button>
     </div>
   </header>
+
+  <!-- AI Theming Studio Drawer Overlay -->
+  <aside id="ai-theme-drawer" class="ai-theme-drawer hidden" aria-label="AI Theming Studio">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span class="sparkle-icon">✨</span>
+        <h3>AI Theming Studio</h3>
+      </div>
+      <button id="btn-close-theme" class="tool-btn close-btn" title="Close Studio">✕</button>
+    </div>
+
+    <div class="drawer-content">
+      <!-- Prompt-based AI Generator -->
+      <div class="theme-section">
+        <label for="ai-prompt-input" class="section-label">AI Palette Generator</label>
+        <p class="section-hint">Describe any vibe, color mood, or theme:</p>
+        <div class="prompt-box">
+          <input 
+            type="text" 
+            id="ai-prompt-input" 
+            placeholder="e.g. Cyberpunk Neon, Midnight OLED, Matcha Green..." 
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="btn-ai-generate" class="btn-generate">
+            <span class="btn-sparkle">🪄</span> Generate
+          </button>
+        </div>
+      </div>
+
+      <!-- Curated AI Themes Gallery -->
+      <div class="theme-section">
+        <div class="section-header-row">
+          <span class="section-label">Curated AI Presets</span>
+          <span id="active-theme-name" class="active-badge">Default Modern</span>
+        </div>
+        <div id="theme-presets-grid" class="theme-presets-grid">
+          <!-- Dynamically populated presets -->
+        </div>
+      </div>
+
+      <!-- Ambient Display Options -->
+      <div class="theme-section">
+        <span class="section-label">Ambient Sidebar Options</span>
+        <div class="ambient-controls">
+          <label class="toggle-control">
+            <input type="checkbox" id="chk-ambient-glow" checked>
+            <span class="toggle-text">Subtle Theme Glow Aura</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="chk-frame-tint">
+            <span class="toggle-text">AI Ambient Chat Tint</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Drawer Footer Controls -->
+      <div class="drawer-footer">
+        <button id="btn-reset-theme" class="btn-secondary">Reset to Default</button>
+        <button id="btn-hard-refresh-direct" class="btn-secondary" title="Fixes 'page is out of date' loops by clearing frame cache">
+          ⚡ Clear Frame Cache
+        </button>
+      </div>
+    </div>
+  </aside>
 
   <!-- Main Viewport Container -->
   <main id="viewport" class="viewport">
@@ -66,7 +145,7 @@
       </div>
     </div>
 
-    <!-- Iframe Frame Container with Hardware Accelerated Scaling -->
+    <!-- Iframe Frame Container with Hardware Accelerated Scaling & Theme Aura -->
     <div id="frame-wrapper" class="frame-wrapper">
       <iframe
         id="messenger-frame"

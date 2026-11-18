@@ -1,9 +1,10 @@
 # Messenger Sidebar for Firefox 💬⚡
 
-An ultra-lightweight, robust, resource-efficient, and dynamic Firefox WebExtension that docks Facebook Messenger directly into your browser's native sidebar.
+An ultra-lightweight, robust, resource-efficient, and dynamic Firefox WebExtension that docks Facebook Messenger directly into your browser's native sidebar — now featuring an **AI Theming Studio**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Firefox Addon](https://img.shields.io/badge/Firefox-WebExtension-orange.svg)](https://addons.mozilla.org)
+[![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-brightgreen.svg)]()
 [![Security: Clean](https://img.shields.io/badge/Security-0%20Vulnerabilities-brightgreen.svg)]()
 
 ---
@@ -11,12 +12,13 @@ An ultra-lightweight, robust, resource-efficient, and dynamic Firefox WebExtensi
 ## ✨ Features
 
 - 📌 **Native Sidebar Docking**: Access your Messenger conversations seamlessly without switching tabs or losing your workflow.
-- 🪶 **Ultra-Lightweight & Fast**: Built with pure vanilla JavaScript and CSS. Zero heavy dependencies, zero bundle bloat.
-- 💤 **Memory Saver Engine**: Integrated sleep/suspension mode unloads the iframe DOM and stops network activity when idle, reducing memory and CPU footprint to near zero.
+- 🪄 **AI Theming Studio**: Generate custom color themes by prompt (e.g., *"Cyberpunk 2077"*, *"Midnight OLED"*, *"Matcha Forest"*) or choose from 10 curated AI presets with ambient frame glow aura.
+- ⚡ **Zero Loop & Auto-Recovery**: Smart cache-busting and bulletproof WebSocket handling fixes "page is out of date" loops and keeps your real-time chat connection rock solid.
+- 🪶 **Ultra-Lightweight & Fast**: Pure vanilla JavaScript and CSS with zero heavy dependencies or framework overhead.
+- 💤 **Memory Saver Engine**: Manual sleep mode pauses network activity and unloads DOM when requested (`Ctrl + Alt + S`).
 - 🔍 **Hardware-Accelerated Dynamic Zoom**: Smooth scaling from 50% to 160% with instant shortcut support (`Ctrl +` / `Ctrl -` / `Ctrl 0`).
 - ↗️ **Pop-out Window Mode**: One-click detachment to open Messenger in a dedicated, compact floating window.
-- 🌓 **Adaptive Theme**: Automatically matches your Firefox and OS Dark/Light theme.
-- 🔒 **Privacy & Security First**: Zero data collection, zero telemetry, and scoped permissions.
+- 🔒 **Privacy & Isolation**: Scoped proxy headers that never touch or interfere with your normal browser tabs.
 
 ---
 
@@ -25,35 +27,28 @@ An ultra-lightweight, robust, resource-efficient, and dynamic Firefox WebExtensi
 | Shortcut | Action |
 | :--- | :--- |
 | `Ctrl + Alt + M` (Mac: `Cmd + Alt + M`) | Toggle Messenger Sidebar open / closed |
+| `Ctrl + Alt + T` (Mac: `Cmd + Alt + T`) | Toggle AI Theming Studio |
 | `Ctrl + Alt + S` (Mac: `Cmd + Alt + S`) | Toggle Sleep / Memory Saver Mode |
+| `Shift + Click ⟳` / `Ctrl + Shift + R` | Hard Refresh (Bypass cache & fix out-of-date states) |
 | `Ctrl + +` / `Ctrl + -` | Zoom In / Out |
 | `Ctrl + 0` | Reset Zoom to 100% |
-| `F5` / `Ctrl + R` | Reload Messenger |
+| `F5` / `Ctrl + R` | Normal Reload Messenger |
 
 ---
 
 ## 🚀 Installation
 
 ### Option A: Install from Firefox Add-ons (AMO)
-*(Once published on addons.mozilla.org)*
-1. Visit the add-on listing page on [addons.mozilla.org](https://addons.mozilla.org).
-2. Click **"Add to Firefox"**.
+Visit the official add-on listing on [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/facebook-messenger-sidebar/) and click **"Add to Firefox"**.
 
 ### Option B: Load for Local Development
-1. Open Firefox and navigate to:
-   ```text
-   about:debugging#/runtime/this-firefox
-   ```
+1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
 2. Click **"Load Temporary Add-on..."**.
 3. Select the `manifest.json` file in this repository.
 
 ---
 
 ## 🛠️ Development & Building
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v16+)
-- [Mozilla Firefox](https://www.mozilla.org/firefox/)
 
 ### Available Scripts
 
@@ -70,28 +65,6 @@ An ultra-lightweight, robust, resource-efficient, and dynamic Firefox WebExtensi
   npm run build
   ```
   The packaged distribution will be created in `web-ext-artifacts/`.
-
----
-
-## 📂 Project Structure
-
-```text
-├── background/
-│   └── background.js       # Header proxy & command handler
-├── icons/                  # High-resolution extension icons
-├── options/
-│   ├── options.html        # Settings interface
-│   ├── options.css
-│   └── options.js
-├── sidebar/
-│   ├── sidebar.html        # Main sidebar interface
-│   ├── sidebar.css
-│   └── sidebar.js          # Scaling, memory saver & lifecycle engine
-├── scripts/
-│   └── PowerShell/         # Build & asset utilities
-├── manifest.json           # WebExtension Manifest V2
-└── package.json            # Scripts & metadata
-```
 
 ---
 

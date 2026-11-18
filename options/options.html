@@ -12,21 +12,71 @@
       <img src="../icons/icon-48.png" alt="Logo" class="header-logo">
       <div>
         <h2>Messenger Sidebar</h2>
-        <p class="subtitle">Ultra-lightweight & Dynamic Settings</p>
+        <p class="subtitle">Ultra-lightweight & AI Theming Settings</p>
       </div>
     </header>
 
     <div class="settings-body">
+      <!-- AI Theming System -->
+      <div class="setting-item-block">
+        <div class="setting-header-row">
+          <div>
+            <h3>✨ AI Theming Studio</h3>
+            <p class="setting-desc">Generate or choose custom themes for your Messenger sidebar</p>
+          </div>
+          <span id="opt-active-theme" class="active-badge">Default Modern</span>
+        </div>
+
+        <div class="prompt-box">
+          <input 
+            type="text" 
+            id="opt-ai-prompt" 
+            placeholder="Type any mood or vibe (e.g., Cyberpunk 2077, Midnight OLED, Matcha Green...)" 
+            autocomplete="off"
+          >
+          <button id="opt-btn-generate" class="btn-generate">
+            🪄 Generate
+          </button>
+        </div>
+
+        <div class="presets-label">Popular AI Themes:</div>
+        <div id="opt-presets-grid" class="opt-presets-grid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="ambient-options">
+          <label class="toggle-control">
+            <input type="checkbox" id="opt-chk-glow" checked>
+            <span>Subtle Theme Glow Aura</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="opt-chk-tint">
+            <span>AI Ambient Chat Tint</span>
+          </label>
+        </div>
+      </div>
+
       <!-- Default Zoom Level -->
       <div class="setting-item">
         <div class="setting-label">
           <label for="default-zoom">Default Zoom Level</label>
-          <span class="setting-desc">Adjust sidebar scale (70% - 130%)</span>
+          <span class="setting-desc">Adjust default sidebar zoom scaling (70% - 130%)</span>
         </div>
         <div class="range-container">
           <input type="range" id="default-zoom" min="70" max="130" step="5" value="100">
           <span id="zoom-val">100%</span>
         </div>
+      </div>
+
+      <!-- Recovery & Cache -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label>Cache Recovery & Fixes</label>
+          <span class="setting-desc">Fixes "page is out of date" loops by clearing embedded sidebar frame cache</span>
+        </div>
+        <button id="btn-clear-cache" class="btn-action">
+          ⚡ Clear Frame Cache & Reset
+        </button>
       </div>
 
       <!-- Shortcut Reference -->
@@ -37,8 +87,16 @@
           <kbd>Ctrl+Alt+M</kbd>
         </div>
         <div class="shortcut-row">
+          <span>Toggle AI Theming Studio</span>
+          <kbd>Ctrl+Alt+T</kbd>
+        </div>
+        <div class="shortcut-row">
           <span>Toggle Sleep / Memory Saver</span>
           <kbd>Ctrl+Alt+S</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Hard Refresh (Bypass Cache)</span>
+          <kbd>Ctrl+Shift+R</kbd>
         </div>
         <div class="shortcut-row">
           <span>Zoom In / Zoom Out</span>
