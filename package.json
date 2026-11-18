@@ -1,7 +1,7 @@
 {
   "name": "facebook-messenger-sidebar-addon",
-  "version": "1.1.1",
-  "description": "Ultra lightweight, robust, dynamic and resource-efficient Facebook Messenger Firefox sidebar extension with AI Theming",
+  "version": "1.2.0",
+  "description": "Ultra lightweight, robust, dynamic and resource-efficient Facebook Messenger Firefox sidebar extension with Desktop 3-column view and native chat theming",
   "main": "background/background.js",
   "scripts": {
     "lint": "npx web-ext lint --ignore-files scripts/**",

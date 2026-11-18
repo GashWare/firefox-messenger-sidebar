@@ -1,34 +1,17 @@
 /**
  * Messenger Sidebar - Options Controller
- * Includes AI Theming synchronization, service switching, and cache management.
+ * Handles service endpoints, layout modes, aesthetics, and cache recovery.
  */
 
-const AI_PRESETS = [
-  { id: 'default', name: 'Default Modern', swatches: ['#0084ff', '#18191a'] },
-  { id: 'cosmic', name: 'Cosmic Nebula', swatches: ['#a855f7', '#0e0b1d'] },
-  { id: 'oled', name: 'Midnight OLED', swatches: ['#000000', '#ffffff'] },
-  { id: 'cyberpunk', name: 'Cyberpunk 2077', swatches: ['#00f0ff', '#ffe600'] },
-  { id: 'matrix', name: 'Emerald Matrix', swatches: ['#10b981', '#050d08'] },
-  { id: 'sunset', name: 'Sunset Vaporwave', swatches: ['#f43f5e', '#fb923c'] },
-  { id: 'sakura', name: 'Sakura Bloom', swatches: ['#ec4899', '#fbcfe8'] },
-  { id: 'arctic', name: 'Nordic Arctic', swatches: ['#0ea5e9', '#7dd3fc'] },
-  { id: 'mocha', name: 'Warm Espresso', swatches: ['#d97706', '#f59e0b'] },
-  { id: 'amethyst', name: 'Royal Amethyst', swatches: ['#9333ea', '#c084fc'] }
-];
-
 const selectServiceUrl = document.getElementById('select-service-url');
+const chkDefaultDesktop = document.getElementById('chk-default-desktop');
 const zoomRange = document.getElementById('default-zoom');
 const zoomVal = document.getElementById('zoom-val');
 const statusMsg = document.getElementById('save-status');
-const optActiveThemeBadge = document.getElementById('opt-active-theme');
-const optAiPrompt = document.getElementById('opt-ai-prompt');
-const optBtnGenerate = document.getElementById('opt-btn-generate');
-const optPresetsGrid = document.getElementById('opt-presets-grid');
 const optChkGlow = document.getElementById('opt-chk-glow');
 const optChkTint = document.getElementById('opt-chk-tint');
 const btnClearCache = document.getElementById('btn-clear-cache');
 
-let currentActiveThemeId = 'default';
 let saveTimeout = null;
 
 function showSaved(text = 'Settings saved automatically') {
@@ -40,59 +23,13 @@ function showSaved(text = 'Settings saved automatically') {
   }, 2200);
 }
 
-// Render Presets
-function renderOptionsPresets() {
-  if (!optPresetsGrid) return;
-  optPresetsGrid.innerHTML = '';
-
-  AI_PRESETS.forEach(p => {
-    const chip = document.createElement('div');
-    chip.className = `preset-chip ${currentActiveThemeId === p.id ? 'active' : ''}`;
-    chip.dataset.id = p.id;
-
-    const label = document.createElement('span');
-    label.textContent = p.name;
-    chip.appendChild(label);
-
-    const swatch = document.createElement('span');
-    swatch.className = 'chip-swatch';
-    swatch.style.backgroundColor = p.swatches[0];
-    chip.appendChild(swatch);
-
-    chip.addEventListener('click', () => {
-      currentActiveThemeId = p.id;
-      optActiveThemeBadge.textContent = p.name;
-      saveThemeSelection(p.id, p.name);
-      renderOptionsPresets();
-    });
-
-    optPresetsGrid.appendChild(chip);
-  });
-}
-
-// Save Theme Selection
-async function saveThemeSelection(themeId, themeName) {
-  const stored = await browser.storage.local.get(['aiThemeConfig']);
-  const currentConfig = stored.aiThemeConfig || {};
-
-  currentConfig.activeTheme = {
-    id: themeId,
-    name: themeName
-  };
-  currentConfig.ambientGlowEnabled = optChkGlow.checked;
-  currentConfig.frameTintEnabled = optChkTint.checked;
-
-  await browser.storage.local.set({ aiThemeConfig: currentConfig });
-  showSaved(`Applied theme: ${themeName}`);
-}
-
 // Load saved settings
 async function loadSettings() {
   const defaults = {
     zoomLevel: 100,
-    serviceUrl: 'https://www.messenger.com/',
+    serviceUrl: 'https://www.facebook.com/messages/t/',
+    desktopMode: false,
     aiThemeConfig: {
-      activeTheme: { id: 'default', name: 'Default Modern' },
       ambientGlowEnabled: true,
       frameTintEnabled: false
     }
@@ -106,11 +43,11 @@ async function loadSettings() {
     selectServiceUrl.value = stored.serviceUrl;
   }
 
+  if (chkDefaultDesktop) {
+    chkDefaultDesktop.checked = stored.desktopMode || false;
+  }
+
   if (stored.aiThemeConfig) {
-    if (stored.aiThemeConfig.activeTheme) {
-      currentActiveThemeId = stored.aiThemeConfig.activeTheme.id || 'default';
-      optActiveThemeBadge.textContent = stored.aiThemeConfig.activeTheme.name || 'Default Modern';
-    }
     if (stored.aiThemeConfig.ambientGlowEnabled !== undefined) {
       optChkGlow.checked = stored.aiThemeConfig.ambientGlowEnabled;
     }
@@ -118,8 +55,6 @@ async function loadSettings() {
       optChkTint.checked = stored.aiThemeConfig.frameTintEnabled;
     }
   }
-
-  renderOptionsPresets();
 }
 
 // Save Zoom
@@ -128,7 +63,7 @@ function saveZoom() {
     zoomLevel: parseInt(zoomRange.value, 10)
   };
   browser.storage.local.set(data).then(() => {
-    showSaved();
+    showSaved('Default zoom level updated');
   });
 }
 
@@ -144,30 +79,32 @@ if (selectServiceUrl) {
   });
 }
 
-optChkGlow.addEventListener('change', () => {
-  saveThemeSelection(currentActiveThemeId, optActiveThemeBadge.textContent);
-});
+if (chkDefaultDesktop) {
+  chkDefaultDesktop.addEventListener('change', async (e) => {
+    await browser.storage.local.set({ desktopMode: e.target.checked });
+    showSaved(e.target.checked ? 'Default layout set to Desktop 3-Column View' : 'Default layout set to Compact View');
+  });
+}
 
-optChkTint.addEventListener('change', () => {
-  saveThemeSelection(currentActiveThemeId, optActiveThemeBadge.textContent);
-});
+function saveAestheticSettings() {
+  browser.storage.local.set({
+    aiThemeConfig: {
+      ambientGlowEnabled: optChkGlow.checked,
+      frameTintEnabled: optChkTint.checked
+    }
+  }).then(() => {
+    showSaved('Appearance updated');
+  });
+}
 
-// Prompt Generate in options
-optBtnGenerate.addEventListener('click', () => {
-  const prompt = optAiPrompt.value.trim();
-  if (prompt) {
-    currentActiveThemeId = `ai_custom`;
-    optActiveThemeBadge.textContent = prompt;
-    saveThemeSelection('ai_custom', prompt);
-    renderOptionsPresets();
-  }
-});
+optChkGlow.addEventListener('change', saveAestheticSettings);
+optChkTint.addEventListener('change', saveAestheticSettings);
 
-// Clear Cache Button
+// Clear Cache & Reset Service Workers
 btnClearCache.addEventListener('click', async () => {
   try {
     await browser.runtime.sendMessage({ action: 'clearCache' });
-    showSaved('✓ Frame cache cleared! Re-opening the sidebar will fetch fresh files.');
+    showSaved('✓ Disk cache & stale service workers wiped! Re-opening the sidebar will fetch fresh files.');
   } catch (e) {
     showSaved('Failed to clear cache: ' + e.message);
   }

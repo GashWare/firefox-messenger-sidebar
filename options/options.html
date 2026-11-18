@@ -11,48 +11,42 @@
     <header class="settings-header">
       <img src="../icons/icon-48.png" alt="Logo" class="header-logo">
       <div>
-        <h2>Messenger Sidebar</h2>
-        <p class="subtitle">Ultra-lightweight & AI Theming Settings</p>
+        <h2>Facebook Messenger Sidebar</h2>
+        <p class="subtitle">Chat Theming, Service Endpoints & Diagnostic Controls</p>
       </div>
     </header>
 
     <div class="settings-body">
-      <!-- AI Theming System -->
+      <!-- Native Messenger Chat Theming Instructions -->
       <div class="setting-item-block">
         <div class="setting-header-row">
           <div>
-            <h3>✨ AI Theming Studio</h3>
-            <p class="setting-desc">Generate or choose custom themes for your Messenger sidebar</p>
+            <h3>🎨 Facebook Native Chat Theming & AI Themes</h3>
+            <p class="setting-desc">How to set shared chat themes & AI-generated backgrounds with other users</p>
           </div>
-          <span id="opt-active-theme" class="active-badge">Default Modern</span>
         </div>
 
-        <div class="prompt-box">
-          <input 
-            type="text" 
-            id="opt-ai-prompt" 
-            placeholder="Type any mood or vibe (e.g., Cyberpunk 2077, Midnight OLED, Matcha Green...)" 
-            autocomplete="off"
-          >
-          <button id="opt-btn-generate" class="btn-generate">
-            🪄 Generate
-          </button>
+        <div class="guide-steps">
+          <div class="step-card">
+            <span class="step-badge">Step 1</span>
+            <p>Click on any conversation in your chat list to open it.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-badge">Step 2</span>
+            <p>Click the <strong>Contact Name</strong> or the <strong>ⓘ Info Icon</strong> at the top right of the conversation header.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-badge">Step 3</span>
+            <p>Under <strong>"Customize chat"</strong> in the right-hand panel, click <strong>"Change theme"</strong>.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-badge">Step 4</span>
+            <p>Pick any preset theme, custom gradient, or select <strong>"Create with AI"</strong> to generate a custom AI chat theme!</p>
+          </div>
         </div>
 
-        <div class="presets-label">Popular AI Themes:</div>
-        <div id="opt-presets-grid" class="opt-presets-grid">
-          <!-- Populated dynamically -->
-        </div>
-
-        <div class="ambient-options">
-          <label class="toggle-control">
-            <input type="checkbox" id="opt-chk-glow" checked>
-            <span>Subtle Theme Glow Aura</span>
-          </label>
-          <label class="toggle-control">
-            <input type="checkbox" id="opt-chk-tint">
-            <span>AI Ambient Chat Tint</span>
-          </label>
+        <div class="tip-banner">
+          💡 <strong>Desktop Mode tip:</strong> In narrow sidebars, click the <strong>Desktop 3-Column icon (◫)</strong> in the top toolbar to keep the Chat Info and Theme panel open side-by-side with your messages!
         </div>
       </div>
 
@@ -60,34 +54,61 @@
       <div class="setting-item">
         <div class="setting-label">
           <label for="select-service-url">Messaging Service Endpoint</label>
-          <span class="setting-desc">Switch to Facebook Messages if Messenger.com shows "out of date"</span>
+          <span class="setting-desc">Facebook Messages (official desktop endpoint) or standalone Messenger.com</span>
         </div>
         <select id="select-service-url" class="select-control">
-          <option value="https://www.messenger.com/">Messenger.com (Default)</option>
-          <option value="https://www.facebook.com/messages/t/">Facebook Messages (facebook.com/messages/t/)</option>
+          <option value="https://www.facebook.com/messages/t/">Facebook Messages (facebook.com/messages/t/) [Recommended]</option>
+          <option value="https://www.messenger.com/">Messenger.com (Legacy Standalone)</option>
         </select>
+      </div>
+
+      <!-- Default View Mode -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="chk-default-desktop">Default to Desktop 3-Column View</label>
+          <span class="setting-desc">Always display the Chat Details & Theme customization panel side-by-side</span>
+        </div>
+        <input type="checkbox" id="chk-default-desktop">
       </div>
 
       <!-- Default Zoom Level -->
       <div class="setting-item">
         <div class="setting-label">
-          <label for="default-zoom">Default Zoom Level</label>
-          <span class="setting-desc">Adjust default sidebar zoom scaling (70% - 130%)</span>
+          <label for="default-zoom">Default Zoom Scaling</label>
+          <span class="setting-desc">Adjust default sidebar zoom scaling (50% - 150%)</span>
         </div>
         <div class="range-container">
-          <input type="range" id="default-zoom" min="70" max="130" step="5" value="100">
+          <input type="range" id="default-zoom" min="50" max="150" step="5" value="100">
           <span id="zoom-val">100%</span>
+        </div>
+      </div>
+
+      <!-- Ambient Aesthetics -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label>Sidebar Frame Aesthetics</label>
+          <span class="setting-desc">Subtle visual enhancements for the extension frame</span>
+        </div>
+        <div class="ambient-options">
+          <label class="toggle-control">
+            <input type="checkbox" id="opt-chk-glow" checked>
+            <span>Frame Glow Aura</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="opt-chk-tint">
+            <span>Ambient Tint</span>
+          </label>
         </div>
       </div>
 
       <!-- Recovery & Cache -->
       <div class="setting-item">
         <div class="setting-label">
-          <label>Cache Recovery & Fixes</label>
-          <span class="setting-desc">Fixes "page is out of date" loops by clearing embedded sidebar frame cache</span>
+          <label>Cache & Service Worker Recovery</label>
+          <span class="setting-desc">Fixes "page is out of date" loops by clearing disk cache and stale Comet service workers</span>
         </div>
         <button id="btn-clear-cache" class="btn-action">
-          ⚡ Clear Frame Cache & Reset
+          ⚡ Wipe Cache & Reset Service Workers
         </button>
       </div>
 
@@ -99,7 +120,11 @@
           <kbd>Ctrl+Alt+M</kbd>
         </div>
         <div class="shortcut-row">
-          <span>Toggle AI Theming Studio</span>
+          <span>Toggle Desktop 3-Column View</span>
+          <kbd>Ctrl+Alt+D</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Toggle Chat Themes & Settings</span>
           <kbd>Ctrl+Alt+T</kbd>
         </div>
         <div class="shortcut-row">
@@ -107,7 +132,7 @@
           <kbd>Ctrl+Alt+S</kbd>
         </div>
         <div class="shortcut-row">
-          <span>Hard Refresh (Bypass Cache)</span>
+          <span>Hard Refresh (Wipe Cache)</span>
           <kbd>Ctrl+Shift+R</kbd>
         </div>
         <div class="shortcut-row">

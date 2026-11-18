@@ -1,15 +1,15 @@
 /**
  * Facebook Messenger Sidebar Addon - Background Service
  * Ultra-lightweight, robust, resource-conscious header proxy,
- * cookie persistence layer, high-verbosity diagnostic logging,
- * and cache management engine.
+ * cross-domain session cookie persistence layer, high-verbosity diagnostic logging,
+ * and service worker cache management engine.
  */
 
 const EXT_URL = browser.runtime.getURL(""); // e.g. "moz-extension://<UUID>/"
 
-// Diagnostics In-Memory Log Buffer (Keeps last 250 events)
+// Diagnostics In-Memory Log Buffer (Keeps last 300 events)
 const LOG_BUFFER = [];
-const MAX_LOGS = 250;
+const MAX_LOGS = 300;
 
 function log(level, tag, ...args) {
   const time = new Date().toISOString().substring(11, 23);
@@ -39,11 +39,12 @@ const Logger = {
 
 Logger.info('BG:Init', `Background service worker active. Extension URL: ${EXT_URL}`);
 
-// Track active configuration
+// Track active configuration (Default to official Facebook Messages endpoint)
 let extensionConfig = {
   zoomLevel: 100,
   soundMuted: false,
-  serviceUrl: 'https://www.messenger.com/',
+  serviceUrl: 'https://www.facebook.com/messages/t/',
+  desktopMode: false,
   aiThemeConfig: null
 };
 
@@ -96,6 +97,8 @@ browser.commands.onCommand.addListener((command) => {
     browser.runtime.sendMessage({ action: 'command_toggle_suspend' }).catch(() => {});
   } else if (command === 'toggle-ai-theme') {
     browser.runtime.sendMessage({ action: 'command_toggle_ai_theme' }).catch(() => {});
+  } else if (command === 'toggle-desktop-mode') {
+    browser.runtime.sendMessage({ action: 'command_toggle_desktop_mode' }).catch(() => {});
   }
 });
 
@@ -111,10 +114,71 @@ const sidebarFrameIds = new Set();
 const sidebarFrameKeys = new Set();
 
 /**
- * Checks whether a network request was initiated by our extension's sidebar or popup.
- * Scans documentUrl, originUrl, initiator, frameAncestors, tracked frameIds, and tabId.
+ * Cached session cookie string to prevent excessive cookie store lookups.
+ * Invalidated periodically or on Set-Cookie updates.
+ */
+let cachedCookieString = null;
+let lastCookieFetchTime = 0;
+const COOKIE_CACHE_TTL = 3000; // 3 seconds
+
+/**
+ * Resolves comprehensive session cookies across .facebook.com and .messenger.com.
+ * Fixes the "on-and-off" authentication and version mismatch errors where
+ * cross-site iframes lose the critical c_user / xs / datr tokens.
+ */
+async function getSessionCookieHeader(url) {
+  const now = Date.now();
+  if (cachedCookieString && (now - lastCookieFetchTime < COOKIE_CACHE_TTL)) {
+    return cachedCookieString;
+  }
+
+  const cookieMap = new Map();
+
+  try {
+    // 1. Direct URL cookies
+    const cookieUrl = url.startsWith('ws') ? url.replace(/^ws/, 'http') : url;
+    const directCookies = await browser.cookies.getAll({ url: cookieUrl });
+    for (const c of directCookies) {
+      cookieMap.set(c.name, c.value);
+    }
+
+    // 2. Always fetch .facebook.com cookies (contains the core c_user, xs, datr, sb tokens)
+    const fbCookies = await browser.cookies.getAll({ domain: '.facebook.com' });
+    for (const c of fbCookies) {
+      if (!cookieMap.has(c.name)) {
+        cookieMap.set(c.name, c.value);
+      }
+    }
+
+    // 3. Also fetch .messenger.com cookies
+    const msgrCookies = await browser.cookies.getAll({ domain: '.messenger.com' });
+    for (const c of msgrCookies) {
+      if (!cookieMap.has(c.name)) {
+        cookieMap.set(c.name, c.value);
+      }
+    }
+  } catch (e) {
+    Logger.warn('BG:CookieFetchErr', e.message);
+  }
+
+  if (cookieMap.size > 0) {
+    cachedCookieString = Array.from(cookieMap.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+    lastCookieFetchTime = now;
+  }
+
+  return cachedCookieString;
+}
+
+/**
+ * Identifies requests originating from our extension's sidebar or popup.
+ * Sub_frames loading messenger/facebook inside the browser are always captured.
  */
 function isSidebarRequest(details) {
+  // Any sub_frame request targeted at messenger/facebook is an embedded frame
+  if (details.type === 'sub_frame') {
+    return true;
+  }
+
   // Direct extension document/origin check
   if (details.documentUrl && (details.documentUrl.startsWith(EXT_URL) || details.documentUrl.startsWith("moz-extension://"))) {
     return true;
@@ -176,15 +240,15 @@ browser.webRequest.onBeforeSendHeaders.addListener(
     }
 
     // Determine target origin and referer
-    let targetOrigin = "https://www.messenger.com";
-    let targetReferer = "https://www.messenger.com/";
+    let targetOrigin = "https://www.facebook.com";
+    let targetReferer = "https://www.facebook.com/";
 
-    if (url.includes("m.facebook.com")) {
+    if (url.includes("messenger.com")) {
+      targetOrigin = "https://www.messenger.com";
+      targetReferer = "https://www.messenger.com/";
+    } else if (url.includes("m.facebook.com")) {
       targetOrigin = "https://m.facebook.com";
       targetReferer = "https://m.facebook.com/";
-    } else if (url.includes("facebook.com")) {
-      targetOrigin = "https://www.facebook.com";
-      targetReferer = "https://www.facebook.com/";
     }
 
     // For the iframe document navigation itself:
@@ -226,26 +290,19 @@ browser.webRequest.onBeforeSendHeaders.addListener(
     }
 
     // CRITICAL: Cookie Injection for Firefox Total Cookie Protection (TCP / dFPI)
-    // When a cross-origin iframe makes requests, Firefox strips SameSite=Lax cookies.
-    // We check if the Cookie header was stripped and restore authentic cookies from the store.
+    // Ensures c_user and xs session cookies are ALWAYS present on sub_frame, XHR, and WebSockets.
     let cookieHeader = requestHeaders.find(h => h.name.toLowerCase() === 'cookie');
     const isMissingAuth = !cookieHeader || !cookieHeader.value || !cookieHeader.value.includes('c_user');
 
     if (isMissingAuth && browser.cookies) {
-      try {
-        const cookieUrl = url.startsWith('ws') ? url.replace(/^ws/, 'http') : url;
-        const cookies = await browser.cookies.getAll({ url: cookieUrl });
-        if (cookies && cookies.length > 0) {
-          const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-          if (cookieHeader) {
-            cookieHeader.value = cookieStr;
-          } else {
-            requestHeaders.push({ name: 'Cookie', value: cookieStr });
-          }
-          Logger.info('BG:CookieInject', `Restored ${cookies.length} session cookies for ${details.type} -> ${url.substring(0, 45)}`);
+      const fullCookies = await getSessionCookieHeader(url);
+      if (fullCookies) {
+        if (cookieHeader) {
+          cookieHeader.value = fullCookies;
+        } else {
+          requestHeaders.push({ name: 'Cookie', value: fullCookies });
         }
-      } catch (err) {
-        Logger.warn('BG:CookieInjectErr', err.message);
+        Logger.info('BG:CookieInject', `Restored session cookies for ${details.type} -> ${url.substring(0, 45)}`);
       }
     }
 
@@ -265,8 +322,8 @@ browser.webRequest.onBeforeSendHeaders.addListener(
  */
 browser.webRequest.onHeadersReceived.addListener(
   (details) => {
-    // Only intercept requests belonging to our sidebar!
-    if (!isSidebarRequest(details)) {
+    // Always strip framing restrictions on sub_frame requests!
+    if (!isSidebarRequest(details) && details.type !== 'sub_frame') {
       return;
     }
 
@@ -303,6 +360,7 @@ browser.webRequest.onHeadersReceived.addListener(
       if (name === 'set-cookie') {
         let cookieVal = header.value;
         if (cookieVal) {
+          cachedCookieString = null; // Invalidate cache so new token is picked up
           if (/SameSite=(Lax|Strict)/i.test(cookieVal)) {
             cookieVal = cookieVal.replace(/SameSite=(Lax|Strict)/gi, 'SameSite=None');
           } else if (!cookieVal.includes('SameSite=')) {
@@ -374,9 +432,13 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
 
   if (message.action === 'clearCache') {
     try {
-      if (browser.browsingData && browser.browsingData.removeCache) {
+      cachedCookieString = null;
+      if (browser.browsingData && browser.browsingData.remove) {
+        // Clear disk cache AND stale Comet service workers
+        await browser.browsingData.remove({}, { cache: true, serviceWorkers: true });
+        Logger.info('BG:CacheClear', 'Purged disk cache and stale service workers via browsingData API');
+      } else if (browser.browsingData && browser.browsingData.removeCache) {
         await browser.browsingData.removeCache({});
-        Logger.info('BG:CacheClear', 'Browser cache successfully wiped via browsingData API');
       }
       return { success: true };
     } catch (e) {
@@ -386,11 +448,11 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
   }
 
   if (message.action === 'openPopout') {
-    const url = message.url || extensionConfig.serviceUrl || 'https://www.messenger.com/';
+    const url = message.url || extensionConfig.serviceUrl || 'https://www.facebook.com/messages/t/';
     browser.windows.create({
       url: url,
       type: 'popup',
-      width: 480,
+      width: 960,
       height: 750
     });
     Logger.info('BG:Popout', `Opened popout window for ${url}`);
