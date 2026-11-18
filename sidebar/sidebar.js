@@ -1,15 +1,25 @@
 /**
- * Ultra-lightweight Facebook Messenger Sidebar Controller
- * Features: Dedicated Messenger instance, GPU-accelerated dynamic zoom,
- * Memory Saver Engine, and Advanced AI Theming Studio with Cache-Buster Recovery.
+ * Facebook Messenger Sidebar Controller
+ * Features:
+ * - Dual Service Mode: Standalone Messenger.com & Facebook Messages (t/)
+ * - AI Theming Studio with 10 curated presets & prompt palette synthesizer
+ * - High-Verbosity Diagnostic Engine with live in-UI log console & one-click copy
+ * - Total Cookie Protection Session Restorer & Hard Cache Recovery
+ * - GPU-accelerated dynamic zoom (50% - 160%) & Memory Saver
  */
 
-const MESSENGER_URL = 'https://www.messenger.com/';
+const DEFAULT_MESSENGER_URL = 'https://www.messenger.com/';
+const FB_MESSAGES_URL = 'https://www.facebook.com/messages/t/';
 
 // State
 let currentZoom = 100;
 let isSuspended = false;
-let isThemeDrawerOpen = false;
+let isDrawerOpen = false;
+let currentTab = 'themes'; // 'themes' | 'diagnostics'
+let activeServiceUrl = DEFAULT_MESSENGER_URL;
+
+// Diagnostics In-Memory State
+let diagnosticsPollTimer = null;
 
 // AI Theming State & Curated Presets
 const AI_PRESETS = [
@@ -190,6 +200,7 @@ let ambientGlowEnabled = true;
 let frameTintEnabled = false;
 
 // DOM Elements
+const brandServiceTitle = document.getElementById('brand-service-title');
 const frame = document.getElementById('messenger-frame');
 const frameWrapper = document.getElementById('frame-wrapper');
 const loader = document.getElementById('loader');
@@ -202,10 +213,17 @@ const btnSuspend = document.getElementById('btn-suspend');
 const btnPopout = document.getElementById('btn-popout');
 const btnWake = document.getElementById('btn-wake');
 
-// AI Theming Elements
+// Extension Drawer Elements
 const btnAiTheme = document.getElementById('btn-ai-theme');
+const btnDiagnostics = document.getElementById('btn-diagnostics');
 const aiThemeDrawer = document.getElementById('ai-theme-drawer');
 const btnCloseTheme = document.getElementById('btn-close-theme');
+const tabBtnThemes = document.getElementById('tab-btn-themes');
+const tabBtnDiagnostics = document.getElementById('tab-btn-diagnostics');
+const tabContentThemes = document.getElementById('tab-content-themes');
+const tabContentDiagnostics = document.getElementById('tab-content-diagnostics');
+
+// AI Theming Controls
 const aiPromptInput = document.getElementById('ai-prompt-input');
 const btnAiGenerate = document.getElementById('btn-ai-generate');
 const themePresetsGrid = document.getElementById('theme-presets-grid');
@@ -215,6 +233,13 @@ const chkFrameTint = document.getElementById('chk-frame-tint');
 const btnResetTheme = document.getElementById('btn-reset-theme');
 const btnHardRefreshDirect = document.getElementById('btn-hard-refresh-direct');
 
+// Diagnostics & Recovery Controls
+const btnServiceMessenger = document.getElementById('btn-service-messenger');
+const btnServiceFacebook = document.getElementById('btn-service-facebook');
+const btnWipeCacheHard = document.getElementById('btn-wipe-cache-hard');
+const diagnosticsLogViewer = document.getElementById('diagnostics-log-viewer');
+const btnCopyLogs = document.getElementById('btn-copy-logs');
+
 /**
  * Apply Dynamic Zoom via CSS Matrix Scale & Inverse Dimensions
  */
@@ -222,7 +247,6 @@ function applyZoom(zoom) {
   currentZoom = Math.min(Math.max(zoom, 50), 160);
   const scale = currentZoom / 100;
 
-  // Scale frame dimensions inversely so contents scale naturally
   frame.style.width = `${(100 / scale)}%`;
   frame.style.height = `${(100 / scale)}%`;
   frame.style.transform = `scale(${scale})`;
@@ -230,6 +254,27 @@ function applyZoom(zoom) {
 
   zoomIndicator.textContent = `${currentZoom}%`;
   browser.storage.local.set({ zoomLevel: currentZoom }).catch(() => {});
+}
+
+/**
+ * Switch Active Messaging Service Endpoint
+ */
+function switchService(newUrl) {
+  if (activeServiceUrl === newUrl) return;
+  activeServiceUrl = newUrl;
+  
+  if (newUrl.includes('messenger.com')) {
+    brandServiceTitle.textContent = 'Messenger';
+    btnServiceMessenger.classList.add('active');
+    btnServiceFacebook.classList.remove('active');
+  } else {
+    brandServiceTitle.textContent = 'FB Messages';
+    btnServiceFacebook.classList.add('active');
+    btnServiceMessenger.classList.remove('active');
+  }
+
+  browser.storage.local.set({ serviceUrl: newUrl }).catch(() => {});
+  hardRefresh();
 }
 
 /**
@@ -243,31 +288,40 @@ function loadMessenger(forceCacheBust = false) {
 
   loader.classList.remove('hidden');
 
-  let targetUrl = MESSENGER_URL;
+  let targetUrl = activeServiceUrl;
   if (forceCacheBust) {
-    targetUrl += `?_nc_ts=${Date.now()}`;
+    const sep = targetUrl.includes('?') ? '&' : '?';
+    targetUrl += `${sep}_nc_ts=${Date.now()}`;
   }
 
-  // Only assign if different or if forcing cache bust to avoid reload loops
+  // Only assign if different or forcing fresh cache bust
   if (forceCacheBust || !frame.src || frame.src === 'about:blank' || frame.src === window.location.href) {
     frame.src = targetUrl;
   }
 }
 
 /**
- * Hard Refresh: Unloads frame completely and does a fresh bypass-cache load.
- * Fixes "This page is out of date" loops if Facebook's client cached stale chunks.
+ * Hard Refresh & Out-of-Date Loop Recovery:
+ * Completely purges browser cache via browsingData API, clears iframe memory,
+ * and loads with fresh timestamp cache-buster.
  */
-function hardRefresh() {
+async function hardRefresh() {
   loader.classList.remove('hidden');
   frame.src = 'about:blank';
+
+  try {
+    await browser.runtime.sendMessage({ action: 'clearCache' });
+  } catch (e) {
+    console.warn('Cache clear request failed', e);
+  }
+
   setTimeout(() => {
     loadMessenger(true);
-  }, 60);
+  }, 100);
 }
 
 /**
- * Suspend Iframe (Manual Sleep: drops RAM/CPU when user explicitly requests it)
+ * Suspend Iframe (Memory Saver: drops RAM/CPU)
  */
 function suspend() {
   isSuspended = true;
@@ -287,12 +341,11 @@ function wakeUp() {
   btnSuspend.classList.remove('active');
   btnSuspend.setAttribute('title', 'Suspend Messenger to save RAM (Ctrl+Alt+S)');
   loader.classList.remove('hidden');
-  frame.src = MESSENGER_URL;
+  frame.src = activeServiceUrl;
 }
 
 /**
  * AI Theming Engine - Semantic Palette Synthesis
- * Intelligently generates harmonious palettes based on user keywords & vibe
  */
 function generateAIThemeFromPrompt(prompt) {
   if (!prompt || !prompt.trim()) return null;
@@ -304,7 +357,6 @@ function generateAIThemeFromPrompt(prompt) {
   let isNeon = false;
   let title = prompt.trim();
 
-  // Mood / Keyword Recognition
   if (text.includes('cyber') || text.includes('neon') || text.includes('2077') || text.includes('synth')) {
     h = 180; s = 100; isNeon = true;
   } else if (text.includes('purple') || text.includes('violet') || text.includes('galaxy') || text.includes('space') || text.includes('nebula')) {
@@ -328,7 +380,6 @@ function generateAIThemeFromPrompt(prompt) {
   } else if (text.includes('light') || text.includes('white') || text.includes('clean') || text.includes('minimal')) {
     isDark = false;
   } else {
-    // Hash-based deterministic hue generation for creative prompts
     let hash = 0;
     for (let i = 0; i < text.length; i++) {
       hash = text.charCodeAt(i) + ((hash << 5) - hash);
@@ -336,7 +387,6 @@ function generateAIThemeFromPrompt(prompt) {
     h = Math.abs(hash) % 360;
   }
 
-  // Construct color variables
   let bgPrimary, bgSecondary, bgToolbar, borderColor, textPrimary, textSecondary, accentColor, accentHover, glowColor, ambientFilter;
 
   if (isDark) {
@@ -395,7 +445,6 @@ function applyTheme(theme, save = true) {
   const c = theme.colors;
 
   if (theme.id === 'default') {
-    // Reset to default CSS properties
     root.style.removeProperty('--bg-primary');
     root.style.removeProperty('--bg-secondary');
     root.style.removeProperty('--bg-toolbar');
@@ -419,7 +468,6 @@ function applyTheme(theme, save = true) {
     root.style.setProperty('--ambient-filter', c.ambientFilter || 'none');
   }
 
-  // Update Ambient Aura
   if (ambientGlowEnabled && theme.id !== 'default') {
     frameWrapper.classList.add('has-glow');
   } else {
@@ -490,17 +538,117 @@ function renderPresetCards() {
 }
 
 /**
- * Toggle AI Theme Drawer
+ * Switch Drawer Tabs: 'themes' | 'diagnostics'
  */
-function toggleThemeDrawer(open) {
-  isThemeDrawerOpen = open !== undefined ? open : !isThemeDrawerOpen;
-  if (isThemeDrawerOpen) {
+function switchDrawerTab(tab) {
+  currentTab = tab;
+  if (tab === 'themes') {
+    tabBtnThemes.classList.add('active');
+    tabBtnDiagnostics.classList.remove('active');
+    tabContentThemes.classList.remove('hidden');
+    tabContentDiagnostics.classList.add('hidden');
+    clearInterval(diagnosticsPollTimer);
+  } else {
+    tabBtnDiagnostics.classList.add('active');
+    tabBtnThemes.classList.remove('active');
+    tabContentDiagnostics.classList.remove('hidden');
+    tabContentThemes.classList.add('hidden');
+    fetchAndRenderDiagnostics();
+    clearInterval(diagnosticsPollTimer);
+    diagnosticsPollTimer = setInterval(fetchAndRenderDiagnostics, 2500);
+  }
+}
+
+/**
+ * Toggle Drawer Overlay
+ */
+function toggleDrawer(open, tab = 'themes') {
+  isDrawerOpen = open !== undefined ? open : !isDrawerOpen;
+  if (isDrawerOpen) {
     aiThemeDrawer.classList.remove('hidden');
-    btnAiTheme.classList.add('active');
-    setTimeout(() => aiPromptInput.focus(), 100);
+    switchDrawerTab(tab);
+    if (tab === 'themes') {
+      btnAiTheme.classList.add('active');
+      btnDiagnostics.classList.remove('active');
+      setTimeout(() => aiPromptInput.focus(), 100);
+    } else {
+      btnDiagnostics.classList.add('active');
+      btnAiTheme.classList.remove('active');
+    }
   } else {
     aiThemeDrawer.classList.add('hidden');
     btnAiTheme.classList.remove('active');
+    btnDiagnostics.classList.remove('active');
+    clearInterval(diagnosticsPollTimer);
+  }
+}
+
+/**
+ * Fetch and Render Live Diagnostic Logs
+ */
+async function fetchAndRenderDiagnostics() {
+  if (!diagnosticsLogViewer) return;
+
+  try {
+    const diag = await browser.runtime.sendMessage({ action: 'getDiagnostics' });
+    if (!diag || !diag.logs) {
+      diagnosticsLogViewer.textContent = 'No diagnostics available';
+      return;
+    }
+
+    diagnosticsLogViewer.innerHTML = '';
+    const logs = diag.logs;
+
+    if (logs.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'log-entry';
+      empty.textContent = 'No events recorded yet. Perform actions to see logs.';
+      diagnosticsLogViewer.appendChild(empty);
+      return;
+    }
+
+    logs.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = `log-entry level-${entry.level}`;
+      div.textContent = `[${entry.time}] [${entry.tag}] ${entry.msg}`;
+      diagnosticsLogViewer.appendChild(div);
+    });
+
+    diagnosticsLogViewer.scrollTop = diagnosticsLogViewer.scrollHeight;
+  } catch (err) {
+    diagnosticsLogViewer.textContent = `Diagnostics error: ${err.message}`;
+  }
+}
+
+/**
+ * Copy Full Diagnostics to Clipboard
+ */
+async function copyDiagnosticsToClipboard() {
+  try {
+    const diag = await browser.runtime.sendMessage({ action: 'getDiagnostics' });
+    const text = [
+      `### Messenger Sidebar Diagnostic Report`,
+      `Timestamp: ${new Date().toISOString()}`,
+      `Active Service: ${activeServiceUrl}`,
+      `Zoom: ${currentZoom}%`,
+      `Active Theme: ${activeTheme.name}`,
+      `Tracked Frame IDs: ${JSON.stringify(diag.sidebarFrameIds || [])}`,
+      `Tracked Frame Keys: ${JSON.stringify(diag.sidebarFrameKeys || [])}`,
+      ``,
+      `### Event Logs (${diag.logs ? diag.logs.length : 0} entries):`,
+      ...(diag.logs || []).map(l => `[${l.time}] [${l.level}] [${l.tag}] ${l.msg}`)
+    ].join('\n');
+
+    await navigator.clipboard.writeText(text);
+    btnCopyLogs.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btnCopyLogs.textContent = '📋 Copy Logs';
+    }, 2000);
+  } catch (err) {
+    btnCopyLogs.textContent = 'Failed to copy';
+    setTimeout(() => {
+      btnCopyLogs.textContent = '📋 Copy Logs';
+    }, 2000);
   }
 }
 
@@ -508,12 +656,12 @@ function toggleThemeDrawer(open) {
  * Initialize Event Listeners
  */
 function initEvents() {
-  // Zoom In / Out / Reset
+  // Zoom Controls
   btnZoomIn.addEventListener('click', () => applyZoom(currentZoom + 10));
   btnZoomOut.addEventListener('click', () => applyZoom(currentZoom - 10));
   zoomIndicator.addEventListener('click', () => applyZoom(100));
 
-  // Reload: Click = Standard Reload | Shift+Click = Hard Refresh with Cache-Buster
+  // Reload: Click = Standard Reload | Shift+Click = Hard Refresh with Cache Wipe
   btnReload.addEventListener('click', (e) => {
     if (isSuspended) {
       wakeUp();
@@ -525,8 +673,7 @@ function initEvents() {
         try {
           frame.contentWindow.location.reload();
         } catch (err) {
-          // Cross-origin fallback
-          frame.src = MESSENGER_URL;
+          frame.src = activeServiceUrl;
         }
       }
     }
@@ -541,20 +688,42 @@ function initEvents() {
     }
   });
 
-  // Wake Button on sleep screen
+  // Wake Button
   btnWake.addEventListener('click', wakeUp);
 
-  // Popout to Standalone Window
+  // Popout Button
   btnPopout.addEventListener('click', () => {
     browser.runtime.sendMessage({
       action: 'openPopout',
-      url: MESSENGER_URL
+      url: activeServiceUrl
     }).catch(() => {});
   });
 
-  // AI Theming Drawer Toggles
-  btnAiTheme.addEventListener('click', () => toggleThemeDrawer());
-  btnCloseTheme.addEventListener('click', () => toggleThemeDrawer(false));
+  // Drawer Toggles
+  btnAiTheme.addEventListener('click', () => toggleDrawer(undefined, 'themes'));
+  btnDiagnostics.addEventListener('click', () => toggleDrawer(undefined, 'diagnostics'));
+  btnCloseTheme.addEventListener('click', () => toggleDrawer(false));
+
+  tabBtnThemes.addEventListener('click', () => switchDrawerTab('themes'));
+  tabBtnDiagnostics.addEventListener('click', () => switchDrawerTab('diagnostics'));
+
+  // Service Mode Selector
+  btnServiceMessenger.addEventListener('click', () => switchService(DEFAULT_MESSENGER_URL));
+  btnServiceFacebook.addEventListener('click', () => switchService(FB_MESSAGES_URL));
+
+  // Cache Wipe Buttons
+  btnWipeCacheHard.addEventListener('click', () => {
+    hardRefresh();
+    toggleDrawer(false);
+  });
+
+  btnHardRefreshDirect.addEventListener('click', () => {
+    hardRefresh();
+    toggleDrawer(false);
+  });
+
+  // Copy Logs
+  btnCopyLogs.addEventListener('click', copyDiagnosticsToClipboard);
 
   // AI Prompt Generate Button
   btnAiGenerate.addEventListener('click', () => {
@@ -590,12 +759,6 @@ function initEvents() {
     aiPromptInput.value = '';
   });
 
-  // Hard Refresh Button inside Drawer
-  btnHardRefreshDirect.addEventListener('click', () => {
-    hardRefresh();
-    toggleThemeDrawer(false);
-  });
-
   // Iframe Load Completed
   frame.addEventListener('load', () => {
     if (frame.src && frame.src !== 'about:blank') {
@@ -603,7 +766,7 @@ function initEvents() {
     }
   });
 
-  // Global Keyboard Shortcuts inside sidebar
+  // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === '=' || e.key === '+') {
@@ -626,7 +789,7 @@ function initEvents() {
     }
   });
 
-  // Listen for messages from background (e.g. shortcut commands)
+  // Background Commands Listener
   browser.runtime.onMessage.addListener((message) => {
     if (message.action === 'command_toggle_suspend') {
       if (isSuspended) {
@@ -635,7 +798,7 @@ function initEvents() {
         suspend();
       }
     } else if (message.action === 'command_toggle_ai_theme') {
-      toggleThemeDrawer();
+      toggleDrawer(undefined, 'themes');
     }
   });
 }
@@ -645,8 +808,20 @@ function initEvents() {
  */
 async function init() {
   try {
-    const stored = await browser.storage.local.get(['zoomLevel', 'aiThemeConfig']);
+    const stored = await browser.storage.local.get(['zoomLevel', 'aiThemeConfig', 'serviceUrl']);
     if (stored.zoomLevel) currentZoom = stored.zoomLevel;
+    if (stored.serviceUrl) {
+      activeServiceUrl = stored.serviceUrl;
+      if (activeServiceUrl.includes('messenger.com')) {
+        brandServiceTitle.textContent = 'Messenger';
+        btnServiceMessenger.classList.add('active');
+        btnServiceFacebook.classList.remove('active');
+      } else {
+        brandServiceTitle.textContent = 'FB Messages';
+        btnServiceFacebook.classList.add('active');
+        btnServiceMessenger.classList.remove('active');
+      }
+    }
     if (stored.aiThemeConfig) {
       if (stored.aiThemeConfig.activeTheme) activeTheme = stored.aiThemeConfig.activeTheme;
       if (stored.aiThemeConfig.ambientGlowEnabled !== undefined) ambientGlowEnabled = stored.aiThemeConfig.ambientGlowEnabled;

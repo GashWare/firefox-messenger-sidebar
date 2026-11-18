@@ -232,6 +232,22 @@ body {
   gap: 10px;
 }
 
+.select-control {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  min-width: 220px;
+}
+
+.select-control:focus {
+  border-color: var(--accent-color);
+}
+
 .range-container input[type="range"] {
   accent-color: var(--accent-color);
   cursor: pointer;

@@ -12,7 +12,7 @@
     <div class="toolbar-section toolbar-left">
       <div class="brand-badge" title="Facebook Messenger Sidebar">
         <img src="../icons/icon-16.png" alt="Logo" class="brand-icon">
-        <span class="brand-title">Messenger</span>
+        <span class="brand-title" id="brand-service-title">Messenger</span>
       </div>
     </div>
 
@@ -34,8 +34,15 @@
         </svg>
       </button>
 
+      <!-- Diagnostics & Health Panel Toggle -->
+      <button id="btn-diagnostics" class="tool-btn icon-btn" title="Diagnostics & Service Recovery">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </button>
+
       <!-- Reload / Hard Refresh Button -->
-      <button id="btn-reload" class="tool-btn icon-btn" title="Reload Messenger (Click: Reload | Shift+Click: Hard Refresh / Clear Cache)">
+      <button id="btn-reload" class="tool-btn icon-btn" title="Reload (Click: Reload | Shift+Click: Hard Refresh / Clear Cache)">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 4v6h-6"></path>
           <path d="M1 20v-6h6"></path>
@@ -62,17 +69,18 @@
     </div>
   </header>
 
-  <!-- AI Theming Studio Drawer Overlay -->
-  <aside id="ai-theme-drawer" class="ai-theme-drawer hidden" aria-label="AI Theming Studio">
+  <!-- Extension Studio Drawer (Tabs: AI Theming & Diagnostics) -->
+  <aside id="ai-theme-drawer" class="ai-theme-drawer hidden" aria-label="Studio Drawer">
     <div class="drawer-header">
-      <div class="drawer-title">
-        <span class="sparkle-icon">✨</span>
-        <h3>AI Theming Studio</h3>
+      <div class="drawer-tabs">
+        <button id="tab-btn-themes" class="drawer-tab active">✨ AI Theming</button>
+        <button id="tab-btn-diagnostics" class="drawer-tab">🩺 Diagnostics</button>
       </div>
-      <button id="btn-close-theme" class="tool-btn close-btn" title="Close Studio">✕</button>
+      <button id="btn-close-theme" class="tool-btn close-btn" title="Close Panel">✕</button>
     </div>
 
-    <div class="drawer-content">
+    <!-- Tab 1: AI Theming Studio -->
+    <div id="tab-content-themes" class="drawer-tab-content">
       <!-- Prompt-based AI Generator -->
       <div class="theme-section">
         <label for="ai-prompt-input" class="section-label">AI Palette Generator</label>
@@ -117,12 +125,49 @@
         </div>
       </div>
 
-      <!-- Drawer Footer Controls -->
+      <!-- Themes Footer -->
       <div class="drawer-footer">
         <button id="btn-reset-theme" class="btn-secondary">Reset to Default</button>
         <button id="btn-hard-refresh-direct" class="btn-secondary" title="Fixes 'page is out of date' loops by clearing frame cache">
-          ⚡ Clear Frame Cache
+          ⚡ Wipe Frame Cache
         </button>
+      </div>
+    </div>
+
+    <!-- Tab 2: Diagnostics & Health Console -->
+    <div id="tab-content-diagnostics" class="drawer-tab-content hidden">
+      <!-- Service Mode Selector -->
+      <div class="theme-section">
+        <label class="section-label">Messaging Service Endpoint</label>
+        <p class="section-hint">If Messenger.com shows "out of date", switch to Facebook Messages:</p>
+        <div class="service-mode-group">
+          <button id="btn-service-messenger" class="btn-service active" data-url="https://www.messenger.com/">
+            Messenger.com
+          </button>
+          <button id="btn-service-facebook" class="btn-service" data-url="https://www.facebook.com/messages/t/">
+            Facebook Messages
+          </button>
+        </div>
+      </div>
+
+      <!-- Cache & Frame Recovery -->
+      <div class="theme-section">
+        <label class="section-label">One-Click Loop Recovery</label>
+        <p class="section-hint">Purges corrupted cache via browsingData API and forces a fresh load:</p>
+        <button id="btn-wipe-cache-hard" class="btn-recovery">
+          ⚡ Wipe Cache & Hard Reload
+        </button>
+      </div>
+
+      <!-- Live Diagnostics Log View -->
+      <div class="theme-section">
+        <div class="section-header-row">
+          <label class="section-label">High-Verbosity Diagnostic Logs</label>
+          <button id="btn-copy-logs" class="btn-copy-small" title="Copy diagnostic logs to clipboard">📋 Copy Logs</button>
+        </div>
+        <div id="diagnostics-log-viewer" class="diagnostics-log-viewer">
+          <div class="log-entry">Loading diagnostics...</div>
+        </div>
       </div>
     </div>
   </aside>

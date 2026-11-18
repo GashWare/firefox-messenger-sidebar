@@ -1,6 +1,6 @@
 /**
  * Messenger Sidebar - Options Controller
- * Includes AI Theming synchronization and cache management.
+ * Includes AI Theming synchronization, service switching, and cache management.
  */
 
 const AI_PRESETS = [
@@ -16,6 +16,7 @@ const AI_PRESETS = [
   { id: 'amethyst', name: 'Royal Amethyst', swatches: ['#9333ea', '#c084fc'] }
 ];
 
+const selectServiceUrl = document.getElementById('select-service-url');
 const zoomRange = document.getElementById('default-zoom');
 const zoomVal = document.getElementById('zoom-val');
 const statusMsg = document.getElementById('save-status');
@@ -36,7 +37,7 @@ function showSaved(text = 'Settings saved automatically') {
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
     statusMsg.classList.remove('visible');
-  }, 1800);
+  }, 2200);
 }
 
 // Render Presets
@@ -89,6 +90,7 @@ async function saveThemeSelection(themeId, themeName) {
 async function loadSettings() {
   const defaults = {
     zoomLevel: 100,
+    serviceUrl: 'https://www.messenger.com/',
     aiThemeConfig: {
       activeTheme: { id: 'default', name: 'Default Modern' },
       ambientGlowEnabled: true,
@@ -99,6 +101,10 @@ async function loadSettings() {
   const stored = await browser.storage.local.get(defaults);
   zoomRange.value = stored.zoomLevel || defaults.zoomLevel;
   zoomVal.textContent = `${zoomRange.value}%`;
+
+  if (selectServiceUrl && stored.serviceUrl) {
+    selectServiceUrl.value = stored.serviceUrl;
+  }
 
   if (stored.aiThemeConfig) {
     if (stored.aiThemeConfig.activeTheme) {
@@ -131,6 +137,13 @@ zoomRange.addEventListener('input', (e) => {
 });
 zoomRange.addEventListener('change', saveZoom);
 
+if (selectServiceUrl) {
+  selectServiceUrl.addEventListener('change', async (e) => {
+    await browser.storage.local.set({ serviceUrl: e.target.value });
+    showSaved(`Active service set to: ${e.target.options[e.target.selectedIndex].text}`);
+  });
+}
+
 optChkGlow.addEventListener('change', () => {
   saveThemeSelection(currentActiveThemeId, optActiveThemeBadge.textContent);
 });
@@ -152,8 +165,12 @@ optBtnGenerate.addEventListener('click', () => {
 
 // Clear Cache Button
 btnClearCache.addEventListener('click', async () => {
-  await browser.storage.local.set({ forceNextCacheBust: Date.now() });
-  showSaved('Cache flag reset! Re-opening the sidebar will bypass all cache.');
+  try {
+    await browser.runtime.sendMessage({ action: 'clearCache' });
+    showSaved('✓ Frame cache cleared! Re-opening the sidebar will fetch fresh files.');
+  } catch (e) {
+    showSaved('Failed to clear cache: ' + e.message);
+  }
 });
 
 document.addEventListener('DOMContentLoaded', loadSettings);
